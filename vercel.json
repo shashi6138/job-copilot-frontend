@@ -6,6 +6,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "env": {
-    "VITE_API_URL": "@job-copilot-api-url"
+    "VITE_API_URL": "https://job-copilot-4g7g.onrender.com"
   }
 }
