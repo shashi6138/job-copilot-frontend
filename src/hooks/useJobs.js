@@ -129,6 +129,15 @@ export function useJobs() {
     return () => clearInterval(interval);
   }, []); // eslint-disable-line
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchJobs();
+      fetchStats();
+    }, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchJobs, fetchStats]);
+
   return {
     jobs,
     stats,

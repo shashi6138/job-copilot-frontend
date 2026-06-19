@@ -49,6 +49,8 @@ export default function App() {
     try {
       await api.triggerScrape(key);
       setBanner({ msg: 'Scrape started. Refresh in about 2 minutes.', type: 'success' });
+      setTimeout(handleRefresh, 75 * 1000);
+      setTimeout(handleRefresh, 150 * 1000);
     } catch {
       setBanner({ msg: 'Scrape trigger failed. Check your API key.', type: 'error' });
     }

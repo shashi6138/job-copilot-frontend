@@ -5,6 +5,7 @@ const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 async function req(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json', ...opts.headers },
+    cache: 'no-store',
     ...opts,
   });
   if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
