@@ -1,6 +1,6 @@
 // src/utils/api.js
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BASE = import.meta.env.VITE_API_URL || window?.location?.origin || 'http://localhost:3001';
 
 async function req(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
