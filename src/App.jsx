@@ -43,7 +43,7 @@ export default function App() {
   }
 
   async function handleScrape() {
-    const key = prompt('Enter admin API key:');
+    const key = prompt('Enter admin API key:')?.trim();
     if (!key) return;
 
     try {
@@ -51,8 +51,8 @@ export default function App() {
       setBanner({ msg: 'Scrape started. Refresh in about 2 minutes.', type: 'success' });
       setTimeout(handleRefresh, 75 * 1000);
       setTimeout(handleRefresh, 150 * 1000);
-    } catch {
-      setBanner({ msg: 'Scrape trigger failed. Check your API key.', type: 'error' });
+    } catch (err) {
+      setBanner({ msg: `Scrape trigger failed: ${err.message}`, type: 'error' });
     }
   }
 

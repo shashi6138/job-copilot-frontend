@@ -8,8 +8,11 @@ async function req(path, opts = {}) {
     cache: 'no-store',
     ...opts,
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
-  return res.json();
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || `API ${res.status}: ${res.statusText}`);
+  }
+  return data;
 }
 
 export const api = {
@@ -31,11 +34,17 @@ export const api = {
   // Health
   health:     ()       => req('/health'),
   // Manual scrape (admin)
-  triggerScrape: (apiKey) =>
-    req('/api/jobs/scrape', {
+  triggerScrape: (apiKey) => {
+    const key = apiKey.trim();
+    return req('/api/jobs/scrape', {
       method: 'POST',
-      headers: { 'x-api-key': apiKey },
-    }),
+      headers: {
+        'x-api-key': key,
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({}),
+    });
+  },
 };
 
 export default api;
