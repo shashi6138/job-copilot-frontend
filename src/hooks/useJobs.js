@@ -24,6 +24,7 @@ export function useJobs() {
   const [statsLoading, setStatsLoading] = useState(false);
   const [error,     setError]     = useState(null);
   const [banner,    setBanner]    = useState(null); // { msg, type }
+  const [backendStatus, setBackendStatus] = useState(null);
   const abortRef = useRef(null);
 
   // ── Fetch jobs ──────────────────────────────────────────
@@ -42,14 +43,13 @@ export function useJobs() {
 
     try {
       const data = await api.getJobs(clean);
-      if (data.success) {
-        setJobs(data.data);
-        setMeta(data.meta);
-      }
+      if (!data.success) throw new Error(data.error || 'Failed to fetch jobs');
+      setJobs(data.data);
+      setMeta(data.meta);
     } catch (err) {
       if (err.name !== 'AbortError') {
         setError(err.message);
-        setBanner({ msg: '⚠ Could not reach backend — check your connection', type: 'error' });
+        setBanner({ msg: `Jobs fetch failed: ${err.message}`, type: 'error' });
       }
     } finally {
       setLoading(false);
@@ -62,35 +62,34 @@ export function useJobs() {
 
     try {
       const data = await api.getStats();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch stats');
 
-      if (data.success) {
-        setStats({
-          overview: {
-            total: data.data.total,
-            india: data.data.india,
-            remote: data.data.remote,
-            today: data.data.today,
-            week: data.data.week || 0,
-            highScore: data.data.highScore || 0,
-            withSalary: data.data.withSalary || 0
-          },
-          bySrc: data.data.bySrc || [],
-          lastRun: data.data.lastRun || null
-        });
-      }
+      setStats({
+        overview: {
+          total: data.data.total,
+          india: data.data.india,
+          remote: data.data.remote,
+          today: data.data.today,
+          week: data.data.week || 0,
+          highScore: data.data.highScore || 0,
+          withSalary: data.data.withSalary || 0
+        },
+        bySrc: data.data.bySrc || [],
+        lastRun: data.data.lastRun || null
+      });
 
       const srcData = await api.getSources();
+      if (!srcData.success) throw new Error(srcData.error || 'Failed to fetch sources');
 
-      if (srcData.success) {
-        const sourceList = srcData.sources || srcData.data || [];
-        setSources(sourceList.map(source => ({
-          ...source,
-          total: source.total ?? source.count ?? 0
-        })));
-      }
+      const sourceList = srcData.sources || srcData.data || [];
+      setSources(sourceList.map(source => ({
+        ...source,
+        total: source.total ?? source.count ?? 0
+      })));
 
     } catch (err) {
       console.warn('Stats fetch failed:', err.message);
+      setBanner({ msg: `Stats fetch failed: ${err.message}`, type: 'error' });
     } finally {
       setStatsLoading(false);
     }
@@ -123,6 +122,19 @@ export function useJobs() {
 
   // ── Fetch stats on mount ─────────────────────────────────
   useEffect(() => {
+    const fetchHealth = async () => {
+      try {
+        const health = await api.health();
+        setBackendStatus(health);
+        if (health.adminKeyConfigured === false) {
+          setBanner({ msg: 'Backend admin key is not configured. Set ADMIN_API_KEY or ADMIN_KEY.', type: 'error' });
+        }
+      } catch (err) {
+        console.warn('Health check failed:', err.message);
+      }
+    };
+
+    fetchHealth();
     fetchStats();
     // Refresh stats every 5 minutes
     const interval = setInterval(fetchStats, 5 * 60 * 1000);
@@ -148,6 +160,7 @@ export function useJobs() {
     statsLoading,
     error,
     banner,
+    backendStatus,
     setBanner,
     setFilter,
     resetFilters,

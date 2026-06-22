@@ -42,7 +42,7 @@ export const api = {
         'x-api-key': key,
         Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ apiKey: key }),
     });
   },
 };
